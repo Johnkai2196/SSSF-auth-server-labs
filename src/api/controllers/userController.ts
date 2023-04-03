@@ -82,6 +82,7 @@ const userPut = async (
     const bearer = headers.authorization;
     if (!bearer) {
       next(new CustomError('No token provided', 401));
+      return;
     }
     const token = bearer.split(' ')[1];
     const userFromToken = jwt.verify(
@@ -98,6 +99,7 @@ const userPut = async (
       .select('-password -role');
     if (!result) {
       next(new CustomError('User not found', 404));
+      return;
     }
     const response: DBMessageResponse = {
       message: 'User updated',
