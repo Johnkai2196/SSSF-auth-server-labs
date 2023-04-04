@@ -5,8 +5,6 @@ import userModel from '../models/userModel';
 import {OutputUser, User} from '../../interfaces/User';
 import bcrypt from 'bcryptjs';
 import DBMessageResponse from '../../interfaces/DBMessageResponse';
-import jwt from 'jsonwebtoken';
-import LoginMessageResponse from '../../interfaces/LoginMessageResponse';
 
 const salt = bcrypt.genSaltSync(12);
 // TODO: add function check, to check if the server is alive
@@ -71,21 +69,11 @@ const userPost = async (
 // TODO: add function to update a user
 const userPut = async (
   req: Request<{}, {}, User>,
-  res: Response,
+  res: Response<{}, {user: OutputUser}>,
   next: NextFunction
 ) => {
   try {
-    const headers = req.headers;
-    const bearer = headers.authorization;
-    if (!bearer) {
-      next(new CustomError('No token provided', 401));
-      return;
-    }
-    const token = bearer.split(' ')[1];
-    const userFromToken = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as OutputUser;
+    const userFromToken = res.locals.user;
 
     const user = req.body;
     if (user.password) {
@@ -95,10 +83,12 @@ const userPut = async (
     const result = await userModel
       .findByIdAndUpdate(userFromToken.id, user, {new: true})
       .select('-password -role');
+
     if (!result) {
       next(new CustomError('User not found', 404));
       return;
     }
+
     const response: DBMessageResponse = {
       message: 'User updated',
       user: {
@@ -115,25 +105,20 @@ const userPut = async (
 };
 
 // TODO: add function to delete a user
-const userDelete = async (req: Request, res: Response, next: NextFunction) => {
+const userDelete = async (
+  req: Request,
+  res: Response<{}, {user: OutputUser}>,
+  next: NextFunction
+) => {
   try {
-    const headers = req.headers;
-    const bearer = headers.authorization;
-    if (!bearer) {
-      next(new CustomError('No token provided', 401));
-      return;
-    }
-    const token = bearer.split(' ')[1];
-    const userFromToken = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as OutputUser;
+    const userFromToken = res.locals.user;
 
     const result = await userModel.findByIdAndDelete(userFromToken.id);
     if (!result) {
       next(new CustomError('User not found', 404));
       return;
     }
+
     const response: DBMessageResponse = {
       message: 'User deleted',
       user: {
@@ -142,6 +127,7 @@ const userDelete = async (req: Request, res: Response, next: NextFunction) => {
         id: result._id,
       },
     };
+
     res.json(response);
   } catch (error) {
     next(new CustomError((error as Error).message, 500));
@@ -149,35 +135,18 @@ const userDelete = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // TODO: add function to check if a token is valid
-const checkToken = async (req: Request, res: Response, next: NextFunction) => {
-  const headers = req.headers;
-  const bearer = headers.authorization;
-  if (!bearer) {
-    next(new CustomError('No token provided', 401));
-    return;
-  }
-  const token = bearer.split(' ')[1];
-  const userFromToken = jwt.verify(
-    token,
-    process.env.JWT_SECRET as string
-  ) as OutputUser;
-  const user = await userModel
-    .findById(userFromToken.id)
-    .select('-password -role');
-  if (!user) {
-    next(new CustomError('Token not valid', 404));
-    return;
-  }
-  const newToken = jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.JWT_SECRET as string
-  );
-  const message: LoginMessageResponse = {
+const checkToken = async (
+  req: Request,
+  res: Response<{}, {user: OutputUser}>,
+  next: NextFunction
+) => {
+  const userFromToken = res.locals.user;
+
+  const message: DBMessageResponse = {
     message: 'Token is valid',
-    token: newToken,
+    user: userFromToken,
   };
+
   res.json(message);
 };
 
