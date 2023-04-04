@@ -1,12 +1,4 @@
 // Description: This file contains the functions for the user routes
-// TODO: add function check, to check if the server is alive
-// TODO: add function to get all users
-// TODO: add function to get a user by id
-// TODO: add function to create a user
-// TODO: add function to update a user
-// TODO: add function to delete a user
-// TODO: add function to check if a token is valid
-
 import {NextFunction, Request, Response} from 'express';
 import CustomError from '../../classes/CustomError';
 import userModel from '../models/userModel';
@@ -17,11 +9,12 @@ import jwt from 'jsonwebtoken';
 import LoginMessageResponse from '../../interfaces/LoginMessageResponse';
 
 const salt = bcrypt.genSaltSync(12);
-
+// TODO: add function check, to check if the server is alive
 const check = (req: Request, res: Response) => {
   res.json({message: 'Server is alive'});
 };
 
+// TODO: add function to get all users
 const userListGet = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const users = await userModel.find().select('-password -role');
@@ -31,6 +24,7 @@ const userListGet = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+// TODO: add function to get a user by id
 const userGet = async (
   req: Request<{id: String}>,
   res: Response,
@@ -49,6 +43,7 @@ const userGet = async (
   }
 };
 
+// TODO: add function to create a user
 const userPost = async (
   req: Request<{}, {}, User>,
   res: Response,
@@ -72,6 +67,8 @@ const userPost = async (
     next(new CustomError((error as Error).message, 500));
   }
 };
+
+// TODO: add function to update a user
 const userPut = async (
   req: Request<{}, {}, User>,
   res: Response,
@@ -94,6 +91,8 @@ const userPut = async (
     if (user.password) {
       user.password = await bcrypt.hash(user.password, salt);
     }
+    console.log(userFromToken.id, req.body);
+
     const result = await userModel
       .findByIdAndUpdate(userFromToken.id, user, {new: true})
       .select('-password -role');
@@ -115,6 +114,8 @@ const userPut = async (
     next(new CustomError((error as Error).message, 500));
   }
 };
+
+// TODO: add function to delete a user
 const userDelete = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const headers = req.headers;
@@ -148,6 +149,7 @@ const userDelete = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+// TODO: add function to check if a token is valid
 const checkToken = async (req: Request, res: Response, next: NextFunction) => {
   const headers = req.headers;
   const bearer = headers.authorization;
@@ -170,8 +172,6 @@ const checkToken = async (req: Request, res: Response, next: NextFunction) => {
   const newToken = jwt.sign(
     {
       id: user._id,
-      user_name: user.user_name,
-      email: user.email,
     },
     process.env.JWT_SECRET as string
   );
@@ -179,15 +179,7 @@ const checkToken = async (req: Request, res: Response, next: NextFunction) => {
     message: 'Token is valid',
     token: newToken,
   };
-  res.json({message: 'Token is valid'});
+  res.json(message);
 };
 
-export default {
-  check,
-  userListGet,
-  userGet,
-  userPost,
-  userPut,
-  userDelete,
-  checkToken,
-};
+export {check, userListGet, userGet, userPost, userPut, userDelete, checkToken};
