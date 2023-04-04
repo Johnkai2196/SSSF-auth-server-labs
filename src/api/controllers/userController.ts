@@ -64,7 +64,7 @@ const userPost = async (
     res.json(response);
     res.json(newUser);
   } catch (error) {
-    next(new CustomError((error as Error).message, 500));
+    next(new CustomError('Duplicate entry', 200));
   }
 };
 
@@ -91,7 +91,6 @@ const userPut = async (
     if (user.password) {
       user.password = await bcrypt.hash(user.password, salt);
     }
-    console.log(userFromToken.id, req.body);
 
     const result = await userModel
       .findByIdAndUpdate(userFromToken.id, user, {new: true})

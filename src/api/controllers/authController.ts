@@ -15,11 +15,11 @@ const login = async (
   try {
     const user = await userModel.findOne({email: username});
     if (!user) {
-      next(new CustomError('Incorrect username/password', 403));
+      next(new CustomError('Incorrect username/password', 200));
       return;
     }
     if (!bcrypt.compareSync(password, user.password)) {
-      next(new CustomError('Incorrect username/password', 403));
+      next(new CustomError('Incorrect username/password', 200));
       return;
     }
     //set expiration depending on the app requirements. For example if social media app then no need, if banking app then 1 hour
