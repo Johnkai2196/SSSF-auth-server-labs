@@ -60,7 +60,6 @@ const userPost = async (
       },
     };
     res.json(response);
-    res.json(newUser);
   } catch (error) {
     next(new CustomError('Duplicate entry', 200));
   }
