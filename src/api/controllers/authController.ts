@@ -24,7 +24,10 @@ const login = async (
       return;
     }
     //set expiration depending on the app requirements. For example if social media app then no need, if banking app then 1 hour
-    const token = jwt.sign({id: user._id}, process.env.JWT_SECRET as string);
+    const token = jwt.sign(
+      {id: user._id, role: user.role},
+      process.env.JWT_SECRET as string
+    );
 
     const outputUser: OutputUser = {
       user_name: user.user_name,
