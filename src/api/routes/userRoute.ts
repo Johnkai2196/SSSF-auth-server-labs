@@ -7,6 +7,8 @@ import {
   userListGet,
   userPost,
   userPut,
+  userDeleteAsAdmin,
+  userPutAsAdmin,
 } from '../controllers/userController';
 import {authenticate} from '../../middlewares';
 
